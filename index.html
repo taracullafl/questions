@@ -58,7 +58,23 @@
   .navbtn:disabled { cursor: default; background: rgba(255,255,255,0.03); color: #5b5175; opacity: 0.5; }
   .counter { min-width: 64px; text-align: center; color: #c3b6db; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
   .toast { height: 22px; margin-top: 12px; color: #f2c66d; font-size: 0.85rem; }
-  .note { margin-top: auto; padding-top: 24px; color: #8f83ad; font-size: 0.8rem; text-align: center; }
+  .note { margin-top: 18px; padding-top: 8px; color: #8f83ad; font-size: 0.8rem; text-align: center; }
+  .divider { width: 100%; height: 1px; background: rgba(255,255,255,0.10); margin: 26px 0 20px; }
+  .bonus { width: 100%; border-radius: 18px; padding: 20px; text-align: center;
+    background: linear-gradient(165deg, rgba(242,198,109,0.10), rgba(242,198,109,0.02));
+    border: 1px solid rgba(242,198,109,0.30); }
+  .bonusHead { display: inline-flex; align-items: center; gap: 8px; color: #f2c66d; font-weight: 600; font-size: 0.95rem; }
+  .bonusSub { color: #c3b6db; font-size: 0.86rem; margin: 8px 0 14px; }
+  .bonusRow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  #wInput { width: 150px; text-align: center; letter-spacing: 0.35em; text-transform: uppercase;
+    font-size: 1rem; font-weight: 600; padding: 11px 12px 11px 16px; border-radius: 12px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(242,198,109,0.35); color: #f4eee4; outline: none; }
+  #wInput::placeholder { color: #7d7299; letter-spacing: 0.2em; font-weight: 500; }
+  #wBtn { padding: 11px 20px; border-radius: 12px; cursor: pointer; font-weight: 600;
+    background: #f2c66d; border: none; color: #241539; transition: all .2s ease; }
+  #wBtn:disabled { opacity: 0.6; cursor: default; }
+  .bonusStatus { min-height: 18px; margin: 12px 0 0; font-size: 0.82rem; color: #c3b6db; }
+  .bonusQ { font-size: clamp(1.3rem,4.6vw,1.8rem); margin: 10px 0 16px; }
   .rise { animation: bu-rise .7s ease both; }
   .rise2 { animation: bu-rise .7s ease .1s both; }
   @keyframes bu-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
@@ -115,6 +131,27 @@
 
     <div class="toast" id="toast" aria-live="polite"></div>
     <p class="note" id="note">New questions every day.</p>
+
+    <div class="divider"></div>
+    <div class="bonus" id="bonus">
+      <div class="bonusHead">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
+        Bonus question
+      </div>
+      <div id="bonusLocked">
+        <p class="bonusSub">Enter today's Wordle answer to unlock a bonus question.</p>
+        <div class="bonusRow">
+          <input id="wInput" maxlength="5" placeholder="WORDLE" autocomplete="off" spellcheck="false" aria-label="Today's Wordle answer" />
+          <button id="wBtn">Unlock</button>
+        </div>
+        <p class="bonusStatus" id="wStatus"></p>
+      </div>
+      <div id="bonusOpen" style="display:none">
+        <span class="pill" style="background:#f2c66d1f;border:1px solid #f2c66d55;color:#f2c66d"><span class="pdot" style="background:#f2c66d"></span>Bonus</span>
+        <p class="qtext bonusQ" id="bonusQ"></p>
+        <button class="iconbtn" id="bonusCopy" aria-label="Copy bonus question" style="margin:0 auto"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5.5A1.5 1.5 0 016.5 4H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -143,6 +180,18 @@ const BANK = {
     "What was your family like around the dinner table growing up?",
     "What's a risk you took that you're glad you took?",
     "What did home feel like when you were young?",
+    "What's a rule from your childhood home you've kept, and one you've thrown out?",
+    "Who were you closest to growing up, and are you still?",
+    "What's a photo of yourself from years ago that you love?",
+    "What did you get in trouble for most as a kid?",
+    "What's a place from your past you'd love to show me one day?",
+    "When did you feel most free as a teenager?",
+    "What's something you collected or obsessed over when you were young?",
+    "What's a lesson you learned the hard way early on?",
+    "Who first made you feel genuinely confident?",
+    "What did you imagine being in love would feel like, before you'd felt it?",
+    "What's a family story that gets told again and again?",
+    "What did you daydream about when you should have been paying attention?",
   ],
   future: [
     "If money and time weren't a factor, how would you spend a normal Tuesday?",
@@ -157,6 +206,18 @@ const BANK = {
     "Is there something you want to create or build one day?",
     "What tradition would you want us to start together?",
     "What's worth being patient for?",
+    "What would you want our first proper home together to feel like?",
+    "What's an adventure you want us to have while we still can?",
+    "If you could plan our perfect anniversary, what happens?",
+    "What do you hope you're doing for work in ten years?",
+    "What's something about yourself you'd like to unlearn?",
+    "What would make next year feel like a good year?",
+    "If we had a completely free weekend a month from now, what would you want to do?",
+    "What's a habit you want to build that future-you will thank you for?",
+    "If we ever raised something together, a kid, a pet, a garden, how do you picture us?",
+    "What do you hope stays exactly the same about us?",
+    "What's a place in the world you're saving for the right moment?",
+    "What's one thing you'd love us to be brave about this year?",
   ],
   us: [
     "When did you first know you actually liked me?",
@@ -171,6 +232,18 @@ const BANK = {
     "When do you feel closest to me?",
     "What's something we've gotten through that made us stronger?",
     "What would you want me to remember on a day you're struggling?",
+    "What was going through your head on our first date?",
+    "What's a small ritual we have that you love?",
+    "What do I do when I'm stressed that you've learned to read?",
+    "What's a rough patch that taught you something about us?",
+    "When have you felt most proud to be with me?",
+    "What's something that feels easy with me that's been hard with others?",
+    "What do you think I misunderstand about you sometimes?",
+    "What's a way I could love you better that you've never told me?",
+    "What's your favourite ordinary night we've spent together?",
+    "What made you decide I was worth it?",
+    "What do you want people to say about us in ten years?",
+    "What's something we do together that feels completely us?",
   ],
   believe: [
     "What's a belief you've completely changed your mind about?",
@@ -185,6 +258,18 @@ const BANK = {
     "What do you owe to the people you love?",
     "What's a value you got from your family that you want to keep?",
     "What does forgiveness mean to you?",
+    "Do you think everything happens for a reason?",
+    "What's something you think everyone should experience at least once?",
+    "Where do you draw the line between honesty and kindness?",
+    "What do you think actually makes a relationship last?",
+    "Is there something you believe now that would surprise your younger self?",
+    "What do you think we owe to strangers?",
+    "When is loyalty the wrong choice?",
+    "What does success really mean to you?",
+    "What's a small act that tells you a lot about a person?",
+    "Do you think people are mostly good?",
+    "What would you stand up for, even if you stood alone?",
+    "What's something you think is overrated, and something underrated?",
   ],
   fun: [
     "If we swapped lives for a day, what would surprise you most?",
@@ -199,6 +284,18 @@ const BANK = {
     "We win the lottery tomorrow. What's the first ridiculous thing we buy?",
     "What's a hill you'll die on that doesn't actually matter?",
     "If you could time travel once, past or future?",
+    "What's the pettiest reason you've ever judged someone?",
+    "If we started a business together tomorrow, what is it?",
+    "What's a weirdly specific thing that makes you irrationally happy?",
+    "If you had to describe me as a sandwich, what am I?",
+    "What's the best gift you've ever been given?",
+    "If our pet could talk for one day, what would they expose about us?",
+    "What's a conspiracy theory you secretly kind of enjoy?",
+    "What would the title of your autobiography be?",
+    "If you could be famous for one thing, what would you pick?",
+    "What's the most 'you' thing you own?",
+    "If we could teleport anywhere for dinner tonight, where are we eating?",
+    "What's a small everyday thing you'd never give up?",
   ],
   heart: [
     "What's something you're afraid of that you don't talk about much?",
@@ -213,10 +310,22 @@ const BANK = {
     "What's something you've forgiven yourself for, or want to?",
     "When did you last cry, and was it a good cry or a hard one?",
     "What are you grateful for today that's easy to overlook?",
+    "What's something about yourself you're working on right now?",
+    "When do you feel most at peace?",
+    "What's a compliment that has stuck with you for years?",
+    "What are you harder on yourself about than you should be?",
+    "What does support look like to you on a bad day?",
+    "What's something you've told very few people?",
+    "When did you last surprise yourself?",
+    "What do you do when you feel lonely, even around people?",
+    "What's a fear you've grown out of?",
+    "What makes you feel truly rested?",
+    "What's something you're still healing from?",
+    "What are you proud of about the way you love people?",
   ],
 };
 
-// Surfaces once a week (Fridays), rotating by week number.
+// Surfaces once a week, on Fridays. 52 questions = one for every week of the year.
 const INTIMACY = [
   "What makes you feel most desired by me?",
   "Is there a way you like to be held or touched that you wish I did more?",
@@ -230,39 +339,95 @@ const INTIMACY = [
   "What makes you feel cherished by me day to day?",
   "When did you last feel really connected to me, and what were we doing?",
   "What would make our closeness feel even better than it already is?",
+  "What's your favourite way to be kissed goodbye?",
+  "When do you feel most attractive?",
+  "What's a small gesture from me that makes you melt a little?",
+  "Where do you most like to be touched when we're just close?",
+  "What makes a moment feel romantic to you?",
+  "What's something I wear or do that you find really appealing?",
+  "When do you feel closest to me without a single word being said?",
+  "What helps you relax into being close with me?",
+  "What's a memory of us being close that you think about?",
+  "How do you like to be reassured that I want you?",
+  "What's your idea of a perfect slow evening together?",
+  "What makes you feel truly seen by me?",
+  "What's a way we could be more affectionate day to day?",
+  "What do you find most attractive about who I am, not how I look?",
+  "When did you last feel butterflies with me?",
+  "What's something tender you wish happened more often?",
+  "What's your favourite way to be pulled close?",
+  "What makes you feel safe enough to be completely yourself with me?",
+  "What's a compliment about you that you wish I said more?",
+  "What's your favourite kind of hug from me?",
+  "When do you feel most wanted?",
+  "What's a small intimacy you never want us to lose?",
+  "What makes you feel connected to me after a hard day?",
+  "What's something about our closeness you're grateful for?",
+  "How do you like to reconnect after we've been apart?",
+  "What's a look between us that says more than words could?",
+  "What makes you feel cared for physically?",
+  "What's something you'd love to do together that feels a bit indulgent?",
+  "When do you feel most in sync with me?",
+  "What's a way I could make you feel adored this week?",
+  "What part of our closeness do you wish we made more time for?",
+  "What's the most romantic thing anyone has ever done for you?",
+  "How do you like affection when you're feeling low?",
+  "What's something that instantly puts you in a good mood with me?",
+  "What do you love about how we are when it's just us?",
+  "What's a way we've grown closer over time?",
+  "What makes you feel desired beyond the physical?",
+  "What's a quiet moment with me that you treasure?",
+  "What would make you feel more connected to me right now?",
+  "What's something you love that we only share with each other?",
 ];
 
-// Round-robin flatten so any five consecutive questions span five threads.
-const ORDERED = (function () {
-  const keys = Object.keys(BANK);
-  const out = [];
-  const max = Math.max.apply(null, keys.map(function (k) { return BANK[k].length; }));
-  let id = 0;
-  for (let i = 0; i < max; i++) {
-    for (let j = 0; j < keys.length; j++) {
-      const k = keys[j];
-      if (BANK[k][i]) out.push({ id: id++, thread: k, q: BANK[k][i] });
-    }
-  }
-  return out;
-})();
+// --- pool of daily questions (six threads), each with a stable id ---
+const DAILY_KEYS = ["back", "future", "us", "believe", "fun", "heart"];
+const pool = [];
+DAILY_KEYS.forEach(function (k) {
+  BANK[k].forEach(function (q, i) { pool.push({ id: k + "-" + i, thread: k, q: q }); });
+});
 
-function fiveForToday(now) {
+// deterministic RNG so a given day is identical for both people
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// pick five questions for the day, one per thread, fresh every day of the year
+function dailySet(now) {
   const dayNum = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
-  const start = (dayNum * 5) % ORDERED.length;
-  const five = [];
-  for (let i = 0; i < 5; i++) five.push(ORDERED[(start + i) % ORDERED.length]);
-  // Once a week, on Friday, the fifth card becomes an intimacy question.
-  if (now.getDay() === 5) {
-    const weekNum = Math.floor(dayNum / 7);
-    five[4] = { id: "intimacy-" + weekNum, thread: "intimacy", q: INTIMACY[weekNum % INTIMACY.length], weekly: true };
+  const isFriday = now.getDay() === 5;
+  const rng = mulberry32(dayNum + 1);
+
+  const order = pool.map(function (_, i) { return i; });
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
   }
-  return five;
+
+  const need = isFriday ? 4 : 5;
+  const res = [];
+  const used = {};
+  for (let k = 0; k < order.length && res.length < need; k++) {
+    const q = pool[order[k]];
+    if (!used[q.thread]) { used[q.thread] = true; res.push(q); }
+  }
+
+  if (isFriday) {
+    const weekNum = Math.floor(dayNum / 7);
+    res.push({ id: "intimacy-" + weekNum, thread: "intimacy", q: INTIMACY[weekNum % INTIMACY.length], weekly: true });
+  }
+  return res;
 }
 
 // --- state ---
 const now = new Date();
-const cards = fiveForToday(now);
+const cards = dailySet(now);
 let index = 0;
 const revealed = [false, false, false, false, false];
 const faves = new Set();
@@ -279,7 +444,7 @@ function pillHTML(t, weekly) {
     (weekly ? '<span class="weekly" style="border-left:1px solid ' + t.color + '55">Once a week</span>' : '');
 }
 
-// --- build starfield ---
+// --- starfield ---
 (function () {
   let seed = 7;
   const rnd = function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
@@ -291,7 +456,7 @@ function pillHTML(t, weekly) {
   $('stars').innerHTML = s;
 })();
 
-// --- build dots ---
+// --- dots ---
 const dotEls = [];
 (function () {
   const wrap = $('dots');
@@ -359,22 +524,22 @@ function goTo(i) {
   index = i;
   clearToast();
   const cardEl = $('card');
-  cardEl.classList.add('noanim');   // switch cards instantly, no flip
+  cardEl.classList.add('noanim');
   render();
-  void cardEl.offsetWidth;          // force reflow
+  void cardEl.offsetWidth;
   cardEl.classList.remove('noanim');
 }
 
 function reveal() {
   if (revealed[index]) return;
   revealed[index] = true;
-  render();                          // flips with animation
+  render();
 }
 
 function copyQ(text) {
   try { navigator.clipboard.writeText(text); } catch (e) {}
   const t = $('toast');
-  t.textContent = 'Copied — go send it \u{1F49B}';
+  t.textContent = 'Copied \u2014 go send it \u{1F49B}';
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function () { t.textContent = ''; }, 1600);
 }
@@ -399,8 +564,123 @@ $('app').addEventListener('keydown', function (e) {
   else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); reveal(); }
 });
 
-// initial paint (no entry flip)
 goTo(0);
+
+// ---------- Bonus question, unlocked with the day's Wordle ----------
+const BONUS = [
+  "Would you rather always know when I'm fibbing, or never have to wonder?",
+  "What's a tiny thing I do that you find weirdly attractive?",
+  "If you could read my mind for one hour, when would you use it?",
+  "What's the most spontaneous thing you'd do with me if I said yes right now?",
+  "What's a secret talent you're saving to impress me with one day?",
+  "If we had to get matching tattoos, what are we getting?",
+  "What's the pettiest thing we've ever disagreed about?",
+  "Would you rather redo our first date, or skip ahead to an anniversary?",
+  "What's something you'd love us to do that no one else would need to know about?",
+  "What's the most 'us' meal, however unhealthy?",
+  "If I planned a surprise, what would you secretly hope it was?",
+  "What's a nickname you've thought about calling me but haven't?",
+  "Would you rather dance badly in public with me, or sing badly at home?",
+  "What's a small dare you'd take right now?",
+  "What's a romantic cliche you secretly love?",
+  "If we swapped phones for a day, who panics first?",
+  "What's a photo of me you wish you could frame?",
+  "What would our theme song be?",
+  "What's a bold compliment you've wanted to give me but held back?",
+  "Would you rather a lazy Sunday in bed, or an adventure that becomes a story?",
+  "What's something you'd love to whisper to me but usually don't?",
+  "If we wrote a bucket list tonight, what's number one?",
+  "What's the most attractive thing about how I treat other people?",
+  "What's a look I give that you can read instantly?",
+  "What's one small change to our routine that would make it more fun?",
+  "If you planned the perfect kiss, set the scene.",
+  "What's a compliment you're a bit too shy to say out loud?",
+  "Would you rather slow-dance in the kitchen, or watch the sunrise together?",
+  "What's a habit of mine you've secretly grown to love?",
+  "If tomorrow was a free pass to be spontaneous, what happens?",
+  "What's the most flirtatious thing I've done without realising?",
+  "What would you want more of from our date nights?",
+  "What's a memory of us you'd happily relive on a loop?",
+  "Would you rather laugh until we cry, or talk until sunrise?",
+  "What's something about me you brag about to your friends?",
+  "If our relationship came with a warning label, what would it say?",
+  "What's a tiny adventure we could have this week?",
+  "What would make an ordinary Tuesday feel special?",
+  "What's something irresistible about me that has nothing to do with looks?",
+  "If you could freeze one moment with me forever, which one?",
+  "What's a playful challenge you'd set the two of us?",
+  "What's the first thing you noticed about me that you still like?",
+  "Would you rather be the big romantic, or the quiet steady one?",
+  "What's a surprise you've been wanting to plan for me?",
+  "What's the most 'couple' thing we do that we'd never admit in public?",
+  "If tonight had no rules, what would you want it to be?",
+  "What's something you'd love to hear me say more often?",
+  "What's a small ritual you'd love us to start this year?",
+  "What's your favourite version of me?",
+  "If we had an extra hour together today, no phones, what do we do?",
+];
+
+const bonusDayNum = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+
+function ymd(d) {
+  const p = function (n) { return String(n).padStart(2, "0"); };
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+
+// Best-effort: read today's official Wordle answer. Tries NYT directly, then
+// a couple of public CORS proxies. Returns the solution, or null if unreachable.
+async function fetchSolution() {
+  const base = "https://www.nytimes.com/svc/wordle/v2/" + ymd(now) + ".json";
+  const urls = [
+    base,
+    "https://corsproxy.io/?url=" + encodeURIComponent(base),
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(base),
+  ];
+  for (let i = 0; i < urls.length; i++) {
+    try {
+      const r = await fetch(urls[i], { cache: "no-store" });
+      if (!r.ok) continue;
+      const data = await r.json();
+      if (data && data.solution) return String(data.solution).toUpperCase();
+    } catch (e) { /* try next source */ }
+  }
+  return null;
+}
+
+function unlockBonus() {
+  $("bonusLocked").style.display = "none";
+  $("bonusOpen").style.display = "block";
+  $("bonusQ").textContent = BONUS[bonusDayNum % BONUS.length];
+}
+
+(function () {
+  const input = $("wInput"), btn = $("wBtn"), status = $("wStatus");
+
+  input.addEventListener("input", function () {
+    input.value = input.value.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 5);
+  });
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+  btn.addEventListener("click", submit);
+
+  async function submit() {
+    const guess = input.value.trim().toUpperCase();
+    if (guess.length !== 5) { status.textContent = "Type the five-letter Wordle answer."; return; }
+    btn.disabled = true; status.textContent = "Checking\u2026";
+    const sol = await fetchSolution();
+    btn.disabled = false;
+    if (sol) {
+      if (guess === sol) { status.textContent = ""; unlockBonus(); }
+      else { status.textContent = "That's not today's Wordle. Try again."; }
+    } else {
+      status.textContent = "Couldn't check online, so unlocked on trust.";
+      unlockBonus();
+    }
+  }
+})();
+
+$("bonusCopy").addEventListener("click", function () {
+  copyQ($("bonusQ").textContent);
+});
 </script>
 </body>
 </html>
