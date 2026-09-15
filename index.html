@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Between Us</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap');
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #140d26; }
+  .root {
+    position: relative; min-height: 100vh; width: 100%; outline: none; color: #f4eee4;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background:
+      radial-gradient(120% 80% at 50% 108%, rgba(242,198,109,0.22), rgba(242,198,109,0) 60%),
+      linear-gradient(180deg, #140d26 0%, #1e1436 42%, #2c1c4a 78%, #3a2456 100%);
+    overflow: hidden; display: flex; flex-direction: column; align-items: center;
+  }
+  .stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .wrap {
+    position: relative; width: min(560px, 92vw); padding: clamp(28px,6vh,56px) 0 40px;
+    display: flex; flex-direction: column; align-items: center; flex: 1;
+  }
+  header { text-align: center; margin-bottom: clamp(20px,4vh,36px); }
+  .moon { margin-bottom: 10px; filter: drop-shadow(0 0 14px rgba(242,198,109,0.5)); }
+  h1.title { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(2rem,7vw,2.7rem); margin: 0; letter-spacing: -0.01em; }
+  .date { margin: 8px 0 0; color: #c3b6db; font-size: 0.95rem; }
+  .persp { width: 100%; perspective: 1400px; }
+  .card {
+    position: relative; width: 100%; min-height: min(56vh, 380px);
+    transform-style: preserve-3d; transition: transform .6s cubic-bezier(.2,.7,.2,1);
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .card.noanim { transition: none; }
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 22px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(165deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .face.back { transform: rotateY(180deg); }
+  .frontinner { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 0 24px; }
+  .num { font-family: 'Fraunces', serif; font-size: clamp(3rem,12vw,4.5rem); line-height: 1; opacity: 0.9; }
+  .hint { margin: 0; color: #cabfe4; font-size: 0.98rem; }
+  .backinner { display: flex; flex-direction: column; height: 100%; width: 100%; padding: 26px 24px 20px; }
+  .qwrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .qtext { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: clamp(1.5rem,5.2vw,2.1rem); line-height: 1.28; text-align: center; margin: 0; letter-spacing: -0.01em; }
+  .pill { align-self: center; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px; border-radius: 999px; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.01em; }
+  .pdot { width: 6px; height: 6px; border-radius: 6px; }
+  .weekly { margin-left: 2px; padding-left: 8px; opacity: 0.85; font-weight: 400; }
+  .controls { display: flex; justify-content: space-between; align-items: center; }
+  .iconbtn { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #e5ddf1; transition: all .2s ease; }
+  .takelabel { color: #a99cc6; font-size: 0.82rem; }
+  .dots { display: flex; gap: 10px; margin: 22px 0 18px; align-items: center; }
+  .dot { height: 9px; border: none; cursor: pointer; padding: 0; border-radius: 9px; transition: all .3s ease; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; }
+  .navbtn { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 999px; cursor: pointer; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.14); color: #f4eee4; transition: all .2s ease; }
+  .navbtn:disabled { cursor: default; background: rgba(255,255,255,0.03); color: #5b5175; opacity: 0.5; }
+  .counter { min-width: 64px; text-align: center; color: #c3b6db; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  .toast { height: 22px; margin-top: 12px; color: #f2c66d; font-size: 0.85rem; }
+  .note { margin-top: auto; padding-top: 24px; color: #8f83ad; font-size: 0.8rem; text-align: center; }
+  .rise { animation: bu-rise .7s ease both; }
+  .rise2 { animation: bu-rise .7s ease .1s both; }
+  @keyframes bu-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes bu-twinkle { 0%,100% { opacity: var(--o); } 50% { opacity: calc(var(--o) * 0.35); } }
+  @media (prefers-reduced-motion: reduce) {
+    .card, .rise, .rise2, .star { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="root" id="app" tabindex="0">
+  <svg class="stars" id="stars" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+  <div class="wrap">
+    <header class="rise">
+      <div class="moon">
+        <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M23 20.5A9.5 9.5 0 0111.8 6.2 9.5 9.5 0 1023 20.5z" fill="#f2c66d" fill-opacity="0.9"/></svg>
+      </div>
+      <h1 class="title">Between Us</h1>
+      <p class="date" id="date"></p>
+    </header>
+
+    <div class="persp rise2">
+      <div class="card" id="card" role="button" aria-label="Tap to reveal the question">
+        <div class="face front" id="front">
+          <div class="frontinner">
+            <span class="pill" id="pillFront"></span>
+            <div class="num" id="num">1</div>
+            <p class="hint">Tap to reveal</p>
+          </div>
+        </div>
+        <div class="face back" id="back">
+          <div class="backinner">
+            <span class="pill" id="pillBack"></span>
+            <div class="qwrap"><p class="qtext" id="q"></p></div>
+            <div class="controls">
+              <button class="iconbtn" id="fav" aria-label="Save favourite"></button>
+              <span class="takelabel">Take turns answering</span>
+              <button class="iconbtn" id="copy" aria-label="Copy question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5.5A1.5 1.5 0 016.5 4H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dots" id="dots"></div>
+
+    <div class="nav">
+      <button class="navbtn" id="prev" aria-label="Previous"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="transform:scaleX(-1)" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <span class="counter" id="counter">1 of 5</span>
+      <button class="navbtn" id="next" aria-label="Next"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <p class="note" id="note">New questions every day.</p>
+  </div>
+</div>
+
+<script>
+const THREADS = {
+  back:    { label: "Looking back",    color: "#e79a8f" },
+  future:  { label: "Dreams & future", color: "#f2c66d" },
+  us:      { label: "Us",              color: "#ef9bb3" },
+  believe: { label: "What you believe",color: "#9db4f0" },
+  fun:     { label: "Just for fun",    color: "#86d6c0" },
+  heart:   { label: "Heart",           color: "#ef8f8f" },
+  intimacy:{ label: "Intimacy",        color: "#e06a86" },
+};
+
+const BANK = {
+  back: [
+    "What's a small moment from your childhood that shaped you more than people realise?",
+    "Who did you want to be when you grew up, and how do you feel about that now?",
+    "What's a memory you'd happily relive exactly as it was?",
+    "When did you first feel like an adult?",
+    "What did you believe as a kid that you wish were still true?",
+    "What's something your younger self would be proud of you for?",
+    "What's the bravest thing you did before we met?",
+    "Which teacher, coach, or stranger changed your life without knowing it?",
+    "What's a smell or song that instantly takes you back somewhere?",
+    "What was your family like around the dinner table growing up?",
+    "What's a risk you took that you're glad you took?",
+    "What did home feel like when you were young?",
+  ],
+  future: [
+    "If money and time weren't a factor, how would you spend a normal Tuesday?",
+    "What's something you want to be able to say you did by the time you're old?",
+    "Where do you picture us in five years, honestly?",
+    "What's a skill you secretly want to master?",
+    "If we could live anywhere for a year, where would you pick and why?",
+    "What kind of older person do you hope to become?",
+    "What's a dream you've never said out loud?",
+    "What would you do if you knew you couldn't fail?",
+    "What does a good life actually look like to you?",
+    "Is there something you want to create or build one day?",
+    "What tradition would you want us to start together?",
+    "What's worth being patient for?",
+  ],
+  us: [
+    "When did you first know you actually liked me?",
+    "What's something I do that makes you feel loved without me trying?",
+    "What do you think we're really good at as a team?",
+    "What's a moment with me you keep coming back to?",
+    "How do you most like to be comforted when things are hard?",
+    "What's something you'd like more of from us?",
+    "What made you feel safe with me early on?",
+    "What's a tiny thing I do that you'd miss if it were gone?",
+    "What do you hope people notice about us?",
+    "When do you feel closest to me?",
+    "What's something we've gotten through that made us stronger?",
+    "What would you want me to remember on a day you're struggling?",
+  ],
+  believe: [
+    "What's a belief you've completely changed your mind about?",
+    "What does being a good person mean to you?",
+    "Is there something most people accept that you quietly disagree with?",
+    "What do you think you're here to do?",
+    "When is it right to break a rule?",
+    "What matters more to you: being right or being kind?",
+    "What's something you'd never compromise on?",
+    "Do you think people can really change? Why?",
+    "What's the most important thing money can't buy?",
+    "What do you owe to the people you love?",
+    "What's a value you got from your family that you want to keep?",
+    "What does forgiveness mean to you?",
+  ],
+  fun: [
+    "If we swapped lives for a day, what would surprise you most?",
+    "You get one superpower, but it's mildly inconvenient. What is it?",
+    "What fictional world would you actually want to live in?",
+    "If our life together were a film, what genre is it?",
+    "What's the most useless talent you're weirdly proud of?",
+    "If you had to eat one cuisine forever, which wins?",
+    "What would your villain origin story be?",
+    "If you could instantly know one true thing, what would you ask?",
+    "What animal do you reckon I'd be, and why?",
+    "We win the lottery tomorrow. What's the first ridiculous thing we buy?",
+    "What's a hill you'll die on that doesn't actually matter?",
+    "If you could time travel once, past or future?",
+  ],
+  heart: [
+    "What's something you're afraid of that you don't talk about much?",
+    "When do you feel most like yourself?",
+    "What's been the hardest year of your life, and what got you through it?",
+    "What do you need more of right now?",
+    "What's something you're proud of but never brag about?",
+    "When did you last feel truly seen?",
+    "What makes you feel small, and what makes you feel strong?",
+    "What's a weight you're still carrying that you'd like to put down?",
+    "What do you wish people understood about you?",
+    "What's something you've forgiven yourself for, or want to?",
+    "When did you last cry, and was it a good cry or a hard one?",
+    "What are you grateful for today that's easy to overlook?",
+  ],
+};
+
+// Surfaces once a week (Fridays), rotating by week number.
+const INTIMACY = [
+  "What makes you feel most desired by me?",
+  "Is there a way you like to be held or touched that you wish I did more?",
+  "When do you feel most physically close to me?",
+  "What's something small that instantly makes you feel wanted?",
+  "What helps you feel safe enough to fully let your guard down with me?",
+  "What's a moment between us you found really intimate, even if it wasn't obvious?",
+  "Is there something you've wanted to bring up or try but haven't yet?",
+  "How do you most like affection shown when we're just relaxing together?",
+  "What's your favourite way we're close that has nothing to do with words?",
+  "What makes you feel cherished by me day to day?",
+  "When did you last feel really connected to me, and what were we doing?",
+  "What would make our closeness feel even better than it already is?",
+];
+
+// Round-robin flatten so any five consecutive questions span five threads.
+const ORDERED = (function () {
+  const keys = Object.keys(BANK);
+  const out = [];
+  const max = Math.max.apply(null, keys.map(function (k) { return BANK[k].length; }));
+  let id = 0;
+  for (let i = 0; i < max; i++) {
+    for (let j = 0; j < keys.length; j++) {
+      const k = keys[j];
+      if (BANK[k][i]) out.push({ id: id++, thread: k, q: BANK[k][i] });
+    }
+  }
+  return out;
+})();
+
+function fiveForToday(now) {
+  const dayNum = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+  const start = (dayNum * 5) % ORDERED.length;
+  const five = [];
+  for (let i = 0; i < 5; i++) five.push(ORDERED[(start + i) % ORDERED.length]);
+  // Once a week, on Friday, the fifth card becomes an intimacy question.
+  if (now.getDay() === 5) {
+    const weekNum = Math.floor(dayNum / 7);
+    five[4] = { id: "intimacy-" + weekNum, thread: "intimacy", q: INTIMACY[weekNum % INTIMACY.length], weekly: true };
+  }
+  return five;
+}
+
+// --- state ---
+const now = new Date();
+const cards = fiveForToday(now);
+let index = 0;
+const revealed = [false, false, false, false, false];
+const faves = new Set();
+let toastTimer = null;
+
+const $ = function (id) { return document.getElementById(id); };
+
+function heartSVG(filled) {
+  return '<svg width="20" height="20" viewBox="0 0 24 24" fill="' + (filled ? 'currentColor' : 'none') + '" aria-hidden="true"><path d="M12 20s-7-4.35-9.5-8.5C.9 8.6 2.2 5.5 5.2 5.5c1.8 0 3 1 2.8 1 .8-.9 1.9-1.5 3-1.5 3 0 4.3 3.1 2.7 6C19 15.65 12 20 12 20z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+}
+
+function pillHTML(t, weekly) {
+  return '<span class="pdot" style="background:' + t.color + '"></span>' + t.label +
+    (weekly ? '<span class="weekly" style="border-left:1px solid ' + t.color + '55">Once a week</span>' : '');
+}
+
+// --- build starfield ---
+(function () {
+  let seed = 7;
+  const rnd = function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  let s = '';
+  for (let i = 0; i < 34; i++) {
+    const x = rnd() * 100, y = rnd() * 62, r = 0.6 + rnd() * 1.4, o = 0.25 + rnd() * 0.55, d = rnd() * 4;
+    s += '<circle class="star" cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fdf6e6" style="--o:' + o + ';opacity:' + o + ';animation:bu-twinkle ' + (3 + d) + 's ease-in-out ' + d + 's infinite"/>';
+  }
+  $('stars').innerHTML = s;
+})();
+
+// --- build dots ---
+const dotEls = [];
+(function () {
+  const wrap = $('dots');
+  for (let i = 0; i < 5; i++) {
+    const b = document.createElement('button');
+    b.className = 'dot';
+    b.setAttribute('aria-label', 'Go to question ' + (i + 1));
+    b.addEventListener('click', function () { goTo(i); });
+    wrap.appendChild(b);
+    dotEls.push(b);
+  }
+})();
+
+$('date').textContent = now.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+
+function render() {
+  const card = cards[index];
+  const t = THREADS[card.thread];
+
+  [$('front'), $('back')].forEach(function (f) {
+    f.style.border = '1px solid ' + t.color + '44';
+    f.style.boxShadow = '0 24px 60px -24px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 42px -18px ' + t.color + '66';
+  });
+
+  [$('pillFront'), $('pillBack')].forEach(function (p) {
+    p.style.background = t.color + '1f';
+    p.style.border = '1px solid ' + t.color + '55';
+    p.style.color = t.color;
+    p.innerHTML = pillHTML(t, card.weekly);
+  });
+
+  const n = $('num'); n.textContent = index + 1; n.style.color = t.color;
+  $('q').textContent = card.q;
+
+  const isFave = faves.has(card.id);
+  const fav = $('fav');
+  fav.innerHTML = heartSVG(isFave);
+  fav.style.color = isFave ? '#ef8f8f' : '#e5ddf1';
+  fav.setAttribute('aria-pressed', isFave);
+  fav.setAttribute('aria-label', isFave ? 'Remove favourite' : 'Save favourite');
+
+  const cardEl = $('card');
+  cardEl.classList.toggle('flipped', revealed[index]);
+  cardEl.style.cursor = revealed[index] ? 'default' : 'pointer';
+
+  dotEls.forEach(function (d, i) {
+    const active = i === index;
+    d.style.width = active ? '26px' : '9px';
+    d.style.background = active ? THREADS[cards[i].thread].color
+      : (revealed[i] ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)');
+  });
+
+  $('prev').disabled = index === 0;
+  $('next').disabled = index === 4;
+  $('counter').textContent = (index + 1) + ' of 5';
+  $('note').textContent = revealed.every(Boolean)
+    ? "That's tonight's five. New questions tomorrow."
+    : "New questions every day.";
+}
+
+function clearToast() { $('toast').textContent = ''; }
+
+function goTo(i) {
+  if (i < 0 || i > 4) return;
+  index = i;
+  clearToast();
+  const cardEl = $('card');
+  cardEl.classList.add('noanim');   // switch cards instantly, no flip
+  render();
+  void cardEl.offsetWidth;          // force reflow
+  cardEl.classList.remove('noanim');
+}
+
+function reveal() {
+  if (revealed[index]) return;
+  revealed[index] = true;
+  render();                          // flips with animation
+}
+
+function copyQ(text) {
+  try { navigator.clipboard.writeText(text); } catch (e) {}
+  const t = $('toast');
+  t.textContent = 'Copied — go send it \u{1F49B}';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.textContent = ''; }, 1600);
+}
+
+// --- events ---
+$('card').addEventListener('click', reveal);
+$('fav').addEventListener('click', function (e) {
+  e.stopPropagation();
+  const id = cards[index].id;
+  if (faves.has(id)) faves.delete(id); else faves.add(id);
+  render();
+});
+$('copy').addEventListener('click', function (e) {
+  e.stopPropagation();
+  copyQ(cards[index].q);
+});
+$('prev').addEventListener('click', function () { goTo(index - 1); });
+$('next').addEventListener('click', function () { goTo(index + 1); });
+$('app').addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowRight') { e.preventDefault(); goTo(index + 1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(index - 1); }
+  else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); reveal(); }
+});
+
+// initial paint (no entry flip)
+goTo(0);
+</script>
+</body>
+</html>
