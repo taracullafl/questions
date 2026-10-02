@@ -16,7 +16,10 @@
       linear-gradient(180deg, #140d26 0%, #1e1436 42%, #2c1c4a 78%, #3a2456 100%);
     overflow: hidden; display: flex; flex-direction: column; align-items: center;
   }
-  .stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+  .star { position: absolute; display: block; transform: translate(-50%, -50%); color: #fdf6e6;
+    filter: drop-shadow(0 0 2px rgba(253,246,230,0.95)) drop-shadow(0 0 7px rgba(242,198,109,0.6)); }
+  .star svg { display: block; width: 100%; height: 100%; }
   .wrap {
     position: relative; width: min(560px, 92vw); padding: clamp(28px,6vh,56px) 0 40px;
     display: flex; flex-direction: column; align-items: center; flex: 1;
@@ -86,7 +89,7 @@
 </head>
 <body>
 <div class="root" id="app" tabindex="0">
-  <svg class="stars" id="stars" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+  <div class="stars" id="stars" aria-hidden="true"></div>
   <div class="wrap">
     <header class="rise">
       <div class="moon">
@@ -102,7 +105,7 @@
           <div class="frontinner">
             <span class="pill" id="pillFront"></span>
             <div class="num" id="num">1</div>
-            <p class="hint">Tap to reveal</p>
+            <p class="hint" id="hint">Tap to reveal</p>
           </div>
         </div>
         <div class="face back" id="back">
@@ -156,6 +159,16 @@
 </div>
 
 <script>
+// Questions live in questions.csv (same folder as this page).
+// Columns: category,question
+// Categories: back, future, us, believe, fun, heart, sport, intimacy (Fridays), bonus (Wordle unlock)
+// Questions are used in the order they appear in the file, so add new ones at the bottom.
+const QUESTIONS_FILE = "questions.csv";
+
+// The day the question cycle starts counting from. Leave this alone, or the
+// order resets.
+const START_DATE = new Date(2026, 9, 1); // 1 October 2026
+
 const THREADS = {
   back:    { label: "Looking back",    color: "#e79a8f" },
   future:  { label: "Dreams & future", color: "#f2c66d" },
@@ -163,230 +176,54 @@ const THREADS = {
   believe: { label: "What you believe",color: "#9db4f0" },
   fun:     { label: "Just for fun",    color: "#86d6c0" },
   heart:   { label: "Heart",           color: "#ef8f8f" },
+  sport:   { label: "Game day",        color: "#a8d672" },
   intimacy:{ label: "Intimacy",        color: "#e06a86" },
 };
 
-const BANK = {
-  back: [
-    "What's a small moment from your childhood that shaped you more than people realise?",
-    "Who did you want to be when you grew up, and how do you feel about that now?",
-    "What's a memory you'd happily relive exactly as it was?",
-    "When did you first feel like an adult?",
-    "What did you believe as a kid that you wish were still true?",
-    "What's something your younger self would be proud of you for?",
-    "What's the bravest thing you did before we met?",
-    "Which teacher, coach, or stranger changed your life without knowing it?",
-    "What's a smell or song that instantly takes you back somewhere?",
-    "What was your family like around the dinner table growing up?",
-    "What's a risk you took that you're glad you took?",
-    "What did home feel like when you were young?",
-    "What's a rule from your childhood home you've kept, and one you've thrown out?",
-    "Who were you closest to growing up, and are you still?",
-    "What's a photo of yourself from years ago that you love?",
-    "What did you get in trouble for most as a kid?",
-    "What's a place from your past you'd love to show me one day?",
-    "When did you feel most free as a teenager?",
-    "What's something you collected or obsessed over when you were young?",
-    "What's a lesson you learned the hard way early on?",
-    "Who first made you feel genuinely confident?",
-    "What did you imagine being in love would feel like, before you'd felt it?",
-    "What's a family story that gets told again and again?",
-    "What did you daydream about when you should have been paying attention?",
-  ],
-  future: [
-    "If money and time weren't a factor, how would you spend a normal Tuesday?",
-    "What's something you want to be able to say you did by the time you're old?",
-    "Where do you picture us in five years, honestly?",
-    "What's a skill you secretly want to master?",
-    "If we could live anywhere for a year, where would you pick and why?",
-    "What kind of older person do you hope to become?",
-    "What's a dream you've never said out loud?",
-    "What would you do if you knew you couldn't fail?",
-    "What does a good life actually look like to you?",
-    "Is there something you want to create or build one day?",
-    "What tradition would you want us to start together?",
-    "What's worth being patient for?",
-    "What would you want our first proper home together to feel like?",
-    "What's an adventure you want us to have while we still can?",
-    "If you could plan our perfect anniversary, what happens?",
-    "What do you hope you're doing for work in ten years?",
-    "What's something about yourself you'd like to unlearn?",
-    "What would make next year feel like a good year?",
-    "If we had a completely free weekend a month from now, what would you want to do?",
-    "What's a habit you want to build that future-you will thank you for?",
-    "If we ever raised something together, a kid, a pet, a garden, how do you picture us?",
-    "What do you hope stays exactly the same about us?",
-    "What's a place in the world you're saving for the right moment?",
-    "What's one thing you'd love us to be brave about this year?",
-  ],
-  us: [
-    "When did you first know you actually liked me?",
-    "What's something I do that makes you feel loved without me trying?",
-    "What do you think we're really good at as a team?",
-    "What's a moment with me you keep coming back to?",
-    "How do you most like to be comforted when things are hard?",
-    "What's something you'd like more of from us?",
-    "What made you feel safe with me early on?",
-    "What's a tiny thing I do that you'd miss if it were gone?",
-    "What do you hope people notice about us?",
-    "When do you feel closest to me?",
-    "What's something we've gotten through that made us stronger?",
-    "What would you want me to remember on a day you're struggling?",
-    "What was going through your head on our first date?",
-    "What's a small ritual we have that you love?",
-    "What do I do when I'm stressed that you've learned to read?",
-    "What's a rough patch that taught you something about us?",
-    "When have you felt most proud to be with me?",
-    "What's something that feels easy with me that's been hard with others?",
-    "What do you think I misunderstand about you sometimes?",
-    "What's a way I could love you better that you've never told me?",
-    "What's your favourite ordinary night we've spent together?",
-    "What made you decide I was worth it?",
-    "What do you want people to say about us in ten years?",
-    "What's something we do together that feels completely us?",
-  ],
-  believe: [
-    "What's a belief you've completely changed your mind about?",
-    "What does being a good person mean to you?",
-    "Is there something most people accept that you quietly disagree with?",
-    "What do you think you're here to do?",
-    "When is it right to break a rule?",
-    "What matters more to you: being right or being kind?",
-    "What's something you'd never compromise on?",
-    "Do you think people can really change? Why?",
-    "What's the most important thing money can't buy?",
-    "What do you owe to the people you love?",
-    "What's a value you got from your family that you want to keep?",
-    "What does forgiveness mean to you?",
-    "Do you think everything happens for a reason?",
-    "What's something you think everyone should experience at least once?",
-    "Where do you draw the line between honesty and kindness?",
-    "What do you think actually makes a relationship last?",
-    "Is there something you believe now that would surprise your younger self?",
-    "What do you think we owe to strangers?",
-    "When is loyalty the wrong choice?",
-    "What does success really mean to you?",
-    "What's a small act that tells you a lot about a person?",
-    "Do you think people are mostly good?",
-    "What would you stand up for, even if you stood alone?",
-    "What's something you think is overrated, and something underrated?",
-  ],
-  fun: [
-    "If we swapped lives for a day, what would surprise you most?",
-    "You get one superpower, but it's mildly inconvenient. What is it?",
-    "What fictional world would you actually want to live in?",
-    "If our life together were a film, what genre is it?",
-    "What's the most useless talent you're weirdly proud of?",
-    "If you had to eat one cuisine forever, which wins?",
-    "What would your villain origin story be?",
-    "If you could instantly know one true thing, what would you ask?",
-    "What animal do you reckon I'd be, and why?",
-    "We win the lottery tomorrow. What's the first ridiculous thing we buy?",
-    "What's a hill you'll die on that doesn't actually matter?",
-    "If you could time travel once, past or future?",
-    "What's the pettiest reason you've ever judged someone?",
-    "If we started a business together tomorrow, what is it?",
-    "What's a weirdly specific thing that makes you irrationally happy?",
-    "If you had to describe me as a sandwich, what am I?",
-    "What's the best gift you've ever been given?",
-    "If our pet could talk for one day, what would they expose about us?",
-    "What's a conspiracy theory you secretly kind of enjoy?",
-    "What would the title of your autobiography be?",
-    "If you could be famous for one thing, what would you pick?",
-    "What's the most 'you' thing you own?",
-    "If we could teleport anywhere for dinner tonight, where are we eating?",
-    "What's a small everyday thing you'd never give up?",
-  ],
-  heart: [
-    "What's something you're afraid of that you don't talk about much?",
-    "When do you feel most like yourself?",
-    "What's been the hardest year of your life, and what got you through it?",
-    "What do you need more of right now?",
-    "What's something you're proud of but never brag about?",
-    "When did you last feel truly seen?",
-    "What makes you feel small, and what makes you feel strong?",
-    "What's a weight you're still carrying that you'd like to put down?",
-    "What do you wish people understood about you?",
-    "What's something you've forgiven yourself for, or want to?",
-    "When did you last cry, and was it a good cry or a hard one?",
-    "What are you grateful for today that's easy to overlook?",
-    "What's something about yourself you're working on right now?",
-    "When do you feel most at peace?",
-    "What's a compliment that has stuck with you for years?",
-    "What are you harder on yourself about than you should be?",
-    "What does support look like to you on a bad day?",
-    "What's something you've told very few people?",
-    "When did you last surprise yourself?",
-    "What do you do when you feel lonely, even around people?",
-    "What's a fear you've grown out of?",
-    "What makes you feel truly rested?",
-    "What's something you're still healing from?",
-    "What are you proud of about the way you love people?",
-  ],
-};
+const DAILY_KEYS = ["back", "future", "us", "believe", "fun", "heart", "sport"];
+let BANK = {};      // filled from the CSV: { back: [...], future: [...], ... }
+let INTIMACY = [];  // once a week, on Fridays
+let BONUS = [];     // unlocked with the day's Wordle
 
-// Surfaces once a week, on Fridays. 52 questions = one for every week of the year.
-const INTIMACY = [
-  "What makes you feel most desired by me?",
-  "Is there a way you like to be held or touched that you wish I did more?",
-  "When do you feel most physically close to me?",
-  "What's something small that instantly makes you feel wanted?",
-  "What helps you feel safe enough to fully let your guard down with me?",
-  "What's a moment between us you found really intimate, even if it wasn't obvious?",
-  "Is there something you've wanted to bring up or try but haven't yet?",
-  "How do you most like affection shown when we're just relaxing together?",
-  "What's your favourite way we're close that has nothing to do with words?",
-  "What makes you feel cherished by me day to day?",
-  "When did you last feel really connected to me, and what were we doing?",
-  "What would make our closeness feel even better than it already is?",
-  "What's your favourite way to be kissed goodbye?",
-  "When do you feel most attractive?",
-  "What's a small gesture from me that makes you melt a little?",
-  "Where do you most like to be touched when we're just close?",
-  "What makes a moment feel romantic to you?",
-  "What's something I wear or do that you find really appealing?",
-  "When do you feel closest to me without a single word being said?",
-  "What helps you relax into being close with me?",
-  "What's a memory of us being close that you think about?",
-  "How do you like to be reassured that I want you?",
-  "What's your idea of a perfect slow evening together?",
-  "What makes you feel truly seen by me?",
-  "What's a way we could be more affectionate day to day?",
-  "What do you find most attractive about who I am, not how I look?",
-  "When did you last feel butterflies with me?",
-  "What's something tender you wish happened more often?",
-  "What's your favourite way to be pulled close?",
-  "What makes you feel safe enough to be completely yourself with me?",
-  "What's a compliment about you that you wish I said more?",
-  "What's your favourite kind of hug from me?",
-  "When do you feel most wanted?",
-  "What's a small intimacy you never want us to lose?",
-  "What makes you feel connected to me after a hard day?",
-  "What's something about our closeness you're grateful for?",
-  "How do you like to reconnect after we've been apart?",
-  "What's a look between us that says more than words could?",
-  "What makes you feel cared for physically?",
-  "What's something you'd love to do together that feels a bit indulgent?",
-  "When do you feel most in sync with me?",
-  "What's a way I could make you feel adored this week?",
-  "What part of our closeness do you wish we made more time for?",
-  "What's the most romantic thing anyone has ever done for you?",
-  "How do you like affection when you're feeling low?",
-  "What's something that instantly puts you in a good mood with me?",
-  "What do you love about how we are when it's just us?",
-  "What's a way we've grown closer over time?",
-  "What makes you feel desired beyond the physical?",
-  "What's a quiet moment with me that you treasure?",
-  "What would make you feel more connected to me right now?",
-  "What's something you love that we only share with each other?",
-];
+// --- CSV loading ---
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  text = text.replace(/^﻿/, "");
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+      } else { field += c; }
+    } else if (c === '"') { inQuotes = true; }
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); rows.push(row); row = []; field = "";
+    } else { field += c; }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
 
-// --- pool of daily questions (six threads), each with a stable id ---
-const DAILY_KEYS = ["back", "future", "us", "believe", "fun", "heart"];
-const pool = [];
-DAILY_KEYS.forEach(function (k) {
-  BANK[k].forEach(function (q, i) { pool.push({ id: k + "-" + i, thread: k, q: q }); });
-});
+async function loadQuestions() {
+  const res = await fetch(QUESTIONS_FILE, { cache: "no-store" });
+  if (!res.ok) throw new Error("Couldn't load " + QUESTIONS_FILE + " (" + res.status + ")");
+  const bank = {};
+  DAILY_KEYS.forEach(function (k) { bank[k] = []; });
+  const intimacy = [], bonus = [];
+  parseCSV(await res.text()).forEach(function (r) {
+    const cat = (r[0] || "").trim().toLowerCase();
+    const q = (r[1] || "").trim();
+    if (!q) return;
+    if (bank[cat]) bank[cat].push(q);
+    else if (cat === "intimacy") intimacy.push(q);
+    else if (cat === "bonus") bonus.push(q);
+    // anything else (including the header row) is ignored
+  });
+  BANK = bank; INTIMACY = intimacy; BONUS = bonus;
+}
 
 // deterministic RNG so a given day is identical for both people
 function mulberry32(a) {
@@ -398,36 +235,57 @@ function mulberry32(a) {
   };
 }
 
-// pick five questions for the day, one per thread, fresh every day of the year
-function dailySet(now) {
-  const dayNum = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
-  const isFriday = now.getDay() === 5;
-  const rng = mulberry32(dayNum + 1);
-
-  const order = pool.map(function (_, i) { return i; });
-  for (let i = order.length - 1; i > 0; i--) {
+function shuffle(arr, rng) {
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
-    const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
   }
+  return arr;
+}
 
-  const need = isFriday ? 4 : 5;
-  const res = [];
-  const used = {};
-  for (let k = 0; k < order.length && res.length < need; k++) {
-    const q = pool[order[k]];
-    if (!used[q.thread]) { used[q.thread] = true; res.push(q); }
-  }
+function dayNumber(d) {
+  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+}
+const START_DAY = dayNumber(START_DATE);
 
-  if (isFriday) {
-    const weekNum = Math.floor(dayNum / 7);
-    res.push({ id: "intimacy-" + weekNum, thread: "intimacy", q: INTIMACY[weekNum % INTIMACY.length], weekly: true });
+// Pick five questions for the day, one per thread.
+// Replays every day since START_DATE so each thread knows how many of its
+// questions have already been used, then takes the next one in file order.
+// Each day uses the threads that have been shown least, so they all move
+// through their lists evenly and nothing repeats until a whole list is used.
+function dailySet(now) {
+  const today = Math.max(dayNumber(now), START_DAY);
+  const keys = DAILY_KEYS.filter(function (k) { return BANK[k].length; });
+  const uses = {};
+  keys.forEach(function (k) { uses[k] = 0; });
+  let fridays = 0, res = [];
+
+  for (let d = START_DAY; d <= today; d++) {
+    const isFriday = (d + 4) % 7 === 5 && INTIMACY.length > 0; // day 0 (1 Jan 1970) was a Thursday
+    const rng = mulberry32(d + 1);
+    const ranked = keys.map(function (k) { return { k: k, r: rng() }; })
+      .sort(function (a, b) { return (uses[a.k] - uses[b.k]) || (a.r - b.r); });
+    const picked = ranked.slice(0, isFriday ? 4 : 5).map(function (x) { return x.k; });
+
+    if (d === today) {
+      res = shuffle(picked.slice(), rng).map(function (k) {
+        const i = uses[k] % BANK[k].length;
+        return { id: k + "-" + i, thread: k, q: BANK[k][i] };
+      });
+      if (isFriday) {
+        const i = fridays % INTIMACY.length;
+        res.push({ id: "intimacy-" + i, thread: "intimacy", q: INTIMACY[i], weekly: true });
+      }
+    }
+    picked.forEach(function (k) { uses[k]++; });
+    if (isFriday) fridays++;
   }
   return res;
 }
 
 // --- state ---
 const now = new Date();
-const cards = dailySet(now);
+let cards = [];
 let index = 0;
 const revealed = [false, false, false, false, false];
 const faves = new Set();
@@ -448,10 +306,17 @@ function pillHTML(t, weekly) {
 (function () {
   let seed = 7;
   const rnd = function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  // four-point sparkle for the bigger stars, a soft glowing dot for the small ones
+  const SPARKLE = '<svg viewBox="0 0 24 24"><path d="M12 0C12.9 7.2 16.8 11.1 24 12 16.8 12.9 12.9 16.8 12 24 11.1 16.8 7.2 12.9 0 12 7.2 11.1 11.1 7.2 12 0Z" fill="currentColor"/></svg>';
+  const DOT = '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="currentColor"/></svg>';
   let s = '';
-  for (let i = 0; i < 34; i++) {
-    const x = rnd() * 100, y = rnd() * 62, r = 0.6 + rnd() * 1.4, o = 0.25 + rnd() * 0.55, d = rnd() * 4;
-    s += '<circle class="star" cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fdf6e6" style="--o:' + o + ';opacity:' + o + ';animation:bu-twinkle ' + (3 + d) + 's ease-in-out ' + d + 's infinite"/>';
+  for (let i = 0; i < 46; i++) {
+    const x = rnd() * 100, y = rnd() * 70;
+    const big = rnd() < 0.45 && (x < 20 || x > 80); // big sparkles stay off the title and card
+    const size = big ? 9 + rnd() * 9 : 2 + rnd() * 2.5;
+    const o = big ? 0.55 + rnd() * 0.4 : 0.35 + rnd() * 0.5, d = rnd() * 4;
+    s += '<span class="star" style="left:' + x + '%;top:' + y + '%;width:' + size + 'px;height:' + size + 'px;--o:' + o +
+      ';opacity:' + o + ';animation:bu-twinkle ' + (3 + d) + 's ease-in-out ' + d + 's infinite">' + (big ? SPARKLE : DOT) + '</span>';
   }
   $('stars').innerHTML = s;
 })();
@@ -473,6 +338,7 @@ const dotEls = [];
 $('date').textContent = now.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
 
 function render() {
+  if (!cards.length) return;
   const card = cards[index];
   const t = THREADS[card.thread];
 
@@ -520,7 +386,7 @@ function render() {
 function clearToast() { $('toast').textContent = ''; }
 
 function goTo(i) {
-  if (i < 0 || i > 4) return;
+  if (i < 0 || i > 4 || !cards.length) return;
   index = i;
   clearToast();
   const cardEl = $('card');
@@ -531,7 +397,7 @@ function goTo(i) {
 }
 
 function reveal() {
-  if (revealed[index]) return;
+  if (!cards.length || revealed[index]) return;
   revealed[index] = true;
   render();
 }
@@ -539,7 +405,7 @@ function reveal() {
 function copyQ(text) {
   try { navigator.clipboard.writeText(text); } catch (e) {}
   const t = $('toast');
-  t.textContent = 'Copied \u2014 go send it \u{1F49B}';
+  t.textContent = 'Copied — go send it \u{1F49B}';
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function () { t.textContent = ''; }, 1600);
 }
@@ -548,13 +414,14 @@ function copyQ(text) {
 $('card').addEventListener('click', reveal);
 $('fav').addEventListener('click', function (e) {
   e.stopPropagation();
+  if (!cards.length) return;
   const id = cards[index].id;
   if (faves.has(id)) faves.delete(id); else faves.add(id);
   render();
 });
 $('copy').addEventListener('click', function (e) {
   e.stopPropagation();
-  copyQ(cards[index].q);
+  if (cards.length) copyQ(cards[index].q);
 });
 $('prev').addEventListener('click', function () { goTo(index - 1); });
 $('next').addEventListener('click', function () { goTo(index + 1); });
@@ -564,63 +431,18 @@ $('app').addEventListener('keydown', function (e) {
   else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); reveal(); }
 });
 
-goTo(0);
+// --- start: load the CSV, then build today's set ---
+loadQuestions().then(function () {
+  cards = dailySet(now);
+  goTo(0);
+}).catch(function (err) {
+  console.error(err);
+  $('hint').textContent = "Couldn't load today's questions.";
+  $('note').textContent = "Make sure " + QUESTIONS_FILE + " sits in the same folder as this page.";
+});
 
 // ---------- Bonus question, unlocked with the day's Wordle ----------
-const BONUS = [
-  "Would you rather always know when I'm fibbing, or never have to wonder?",
-  "What's a tiny thing I do that you find weirdly attractive?",
-  "If you could read my mind for one hour, when would you use it?",
-  "What's the most spontaneous thing you'd do with me if I said yes right now?",
-  "What's a secret talent you're saving to impress me with one day?",
-  "If we had to get matching tattoos, what are we getting?",
-  "What's the pettiest thing we've ever disagreed about?",
-  "Would you rather redo our first date, or skip ahead to an anniversary?",
-  "What's something you'd love us to do that no one else would need to know about?",
-  "What's the most 'us' meal, however unhealthy?",
-  "If I planned a surprise, what would you secretly hope it was?",
-  "What's a nickname you've thought about calling me but haven't?",
-  "Would you rather dance badly in public with me, or sing badly at home?",
-  "What's a small dare you'd take right now?",
-  "What's a romantic cliche you secretly love?",
-  "If we swapped phones for a day, who panics first?",
-  "What's a photo of me you wish you could frame?",
-  "What would our theme song be?",
-  "What's a bold compliment you've wanted to give me but held back?",
-  "Would you rather a lazy Sunday in bed, or an adventure that becomes a story?",
-  "What's something you'd love to whisper to me but usually don't?",
-  "If we wrote a bucket list tonight, what's number one?",
-  "What's the most attractive thing about how I treat other people?",
-  "What's a look I give that you can read instantly?",
-  "What's one small change to our routine that would make it more fun?",
-  "If you planned the perfect kiss, set the scene.",
-  "What's a compliment you're a bit too shy to say out loud?",
-  "Would you rather slow-dance in the kitchen, or watch the sunrise together?",
-  "What's a habit of mine you've secretly grown to love?",
-  "If tomorrow was a free pass to be spontaneous, what happens?",
-  "What's the most flirtatious thing I've done without realising?",
-  "What would you want more of from our date nights?",
-  "What's a memory of us you'd happily relive on a loop?",
-  "Would you rather laugh until we cry, or talk until sunrise?",
-  "What's something about me you brag about to your friends?",
-  "If our relationship came with a warning label, what would it say?",
-  "What's a tiny adventure we could have this week?",
-  "What would make an ordinary Tuesday feel special?",
-  "What's something irresistible about me that has nothing to do with looks?",
-  "If you could freeze one moment with me forever, which one?",
-  "What's a playful challenge you'd set the two of us?",
-  "What's the first thing you noticed about me that you still like?",
-  "Would you rather be the big romantic, or the quiet steady one?",
-  "What's a surprise you've been wanting to plan for me?",
-  "What's the most 'couple' thing we do that we'd never admit in public?",
-  "If tonight had no rules, what would you want it to be?",
-  "What's something you'd love to hear me say more often?",
-  "What's a small ritual you'd love us to start this year?",
-  "What's your favourite version of me?",
-  "If we had an extra hour together today, no phones, what do we do?",
-];
-
-const bonusDayNum = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+const bonusDayNum = dayNumber(now);
 
 function ymd(d) {
   const p = function (n) { return String(n).padStart(2, "0"); };
@@ -650,7 +472,8 @@ async function fetchSolution() {
 function unlockBonus() {
   $("bonusLocked").style.display = "none";
   $("bonusOpen").style.display = "block";
-  $("bonusQ").textContent = BONUS[bonusDayNum % BONUS.length];
+  $("bonusQ").textContent = BONUS.length
+    ? BONUS[Math.max(bonusDayNum - START_DAY, 0) % BONUS.length] : "";
 }
 
 (function () {
@@ -665,7 +488,7 @@ function unlockBonus() {
   async function submit() {
     const guess = input.value.trim().toUpperCase();
     if (guess.length !== 5) { status.textContent = "Type the five-letter Wordle answer."; return; }
-    btn.disabled = true; status.textContent = "Checking\u2026";
+    btn.disabled = true; status.textContent = "Checking…";
     const sol = await fetchSolution();
     btn.disabled = false;
     if (sol) {
